@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#ffffff" />
+  <title>SDN: Selected Diffusion Noise</title>
+  <meta name="description" content="SDN is a training-free test-time method for diffusion-based VLA policies: it samples several action chunks from different noise seeds, keeps the ones grounded in task-relevant objects, and executes the smoothest of them." />
+  <meta property="og:title" content="Test-Time Improvement of VLA Policies via Selected Diffusion Noise for Spurious-Robust Action Smoothing" />
+  <meta property="og:description" content="Training-free action selection for diffusion VLAs: a counterfactual grounding filter and a jerk-based kinematic refinement. π0, GR00T N1.5 and N1.6, SIMPLER and real ALOHA tasks." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="assets/overview.jpg" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Crect%20width='32'%20height='32'%20rx='7'%20fill='%232f5fd0'/%3E%3Ccircle%20cx='10'%20cy='12'%20r='2.6'%20fill='%23fff'/%3E%3Ccircle%20cx='14'%20cy='20'%20r='2.6'%20fill='%23fff'/%3E%3Ccircle%20cx='8'%20cy='21'%20r='2.6'%20fill='%23fff'/%3E%3Cpath%20d='M19%209l6%206M25%209l-6%206'%20stroke='%23ff8a7a'%20stroke-width='2.2'%20stroke-linecap='round'/%3E%3Ccircle%20cx='14'%20cy='20'%20r='5'%20fill='none'%20stroke='%2389e39a'%20stroke-width='1.8'/%3E%3C/svg%3E" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=STIX+Two+Text:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="progress"></div>
+
+  <nav class="side-nav" aria-label="Contents">
+    <div class="cap">Contents</div>
+    <ol>
+      <li><a href="#abstract"><span>01</span>Abstract</a></li>
+      <li><a href="#motivation"><span>02</span>Motivation</a></li>
+      <li><a href="#method"><span>03</span>Method</a></li>
+      <li><a href="#simulation"><span>04</span>SIMPLER</a></li>
+      <li><a href="#realworld"><span>05</span>Real world</a></li>
+      <li><a href="#analysis"><span>06</span>Analysis</a></li>
+      <li><a href="#citation"><span>07</span>Citation</a></li>
+    </ol>
+  </nav>
+
+  <header class="hero">
+    <div class="wrap">
+      <div class="chips">
+        <span class="chip hot">Training-free</span>
+        <span class="chip">Test-time action selection</span>
+        <span class="chip">Diffusion &amp; flow VLAs</span>
+        <span class="chip">&pi;<sub>0</sub> &middot; GR00T N1.5 / N1.6</span>
+      </div>
+      <h1>
+        Test-Time Improvement of VLA Policies via <span class="acr">Selected Diffusion Noise</span>
+        <span class="sub">for <b>spurious-robust</b> action smoothing</span>
+      </h1>
+      <!-- TODO: replace with the author list and affiliations once the paper is de-anonymized, e.g.
+           <span>First Author<sup>1</sup></span>, ... and <p class="affils"><span><sup>1</sup>University</span></p> -->
+      <p class="authors"><span>Anonymous Author(s)</span></p>
+      <!-- TODO: venue line, e.g. <p class="venue">IEEE International Conference on Robotics and Automation (ICRA) 2027</p> -->
+      <div class="links">
+        <!-- Add the PDF or arXiv link here once it is public, and drop the "off" class. -->
+        <a class="btn off" href="#" aria-disabled="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+          Paper (soon)
+        </a>
+        <!-- github.com/ducido/SDN is private for now; drop the "off" class when it is public. -->
+        <a class="btn off" href="https://github.com/ducido/SDN" target="_blank" rel="noopener" aria-disabled="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/></svg>
+          Code (soon)
+        </a>
+        <a class="btn ghost" href="#method">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7" cy="8" r="2"/><circle cx="11" cy="15" r="2"/><circle cx="5" cy="16" r="2"/><path d="M15 6l5 5M20 6l-5 5"/></svg>
+          Interactive demo
+        </a>
+        <a class="btn ghost" href="#citation">BibTeX</a>
+      </div>
+
+      <div class="stats reveal">
+        <div class="stat"><div class="n">72.6<small>+8.7</small></div><div class="l">SIMPLER 9-task average with &pi;<sub>0</sub> (63.9 for the vanilla policy)</div></div>
+        <div class="stat"><div class="n">54.5<small>+5.0</small></div><div class="l">SIMPLER 9-task average with GR00T N1.6 (49.5 vanilla)</div></div>
+        <div class="stat"><div class="n">48.3<small>+18.3</small></div><div class="l">Real ALOHA tasks with GR00T N1.5 (30.0 vanilla), with lower jerk</div></div>
+        <div class="stat"><div class="n">0<small style="color:var(--muted)">/ 18</small></div><div class="l">Task&ndash;backbone pairs on SIMPLER where SDN scores below the vanilla policy</div></div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="wrap reveal">
+      <figure class="card pad">
+        <img src="assets/overview.jpg" width="2000" height="685" alt="SDN overview: clean and perturbed inputs pass through the same VLA; the diffusion policy produces a positive set G and a negative set B of action chunks; candidates are pulled toward G and pushed away from B, then the smoothest chunk is selected." />
+        <figcaption><b>Overview of SDN.</b> The frozen VLA samples <i>N</i> action chunks from the clean observation (positive set <span data-tex="\mathcal{G}">&#x1D4A2;</span>) and <i>N</i> from a perturbed observation in which the task-relevant objects are masked (negative set <span data-tex="\mathcal{B}">&#x1D4D1;</span>). <i>Stage 1</i> keeps the top-<i>M</i> candidates by the <i>k</i>-NN grounding score <span data-tex="R_{\text{ground}}^{(i)}=d_{\mathcal{B}}^{(i)}-d_{\mathcal{G}}^{(i)}">R = d<sub>B</sub> &minus; d<sub>G</sub></span>. <i>Stage 2</i> executes the candidate with the lowest jerk.</figcaption>
+      </figure>
+    </section>
+
+    <section id="abstract" class="wrap">
+      <div class="sec-head reveal">
+        <div class="kicker">01 &middot; Abstract</div>
+        <h2>The initial noise is a free choice at test time. SDN chooses it.</h2>
+      </div>
+      <div class="lede reveal">
+        <p>Diffusion-based Vision-Language-Action (VLA) policies generalize well in robot manipulation, but their deployment can remain unreliable. Spurious visual reliance and stochastic action generation lead to grounding failures and kinematically unstable behaviors, and fine-tuning a multi-billion-parameter policy for every new variation is costly and risks catastrophic forgetting.</p>
+        <p>We introduce <b>Selected Diffusion Noise (SDN)</b>, a training-free method that treats diffusion noise as a controllable degree of freedom for improving test-time reliability. SDN samples multiple candidate action chunks and applies two-stage selection: it first filters candidates by task-relevant visual grounding, using a counterfactual negative set, and then selects the kinematically most stable chunk by JerkRMS. Across three VLA policies (&pi;<sub>0</sub>, GR00T N1.5 and N1.6), SDN improves success by 5 to 9 points on the SIMPLER simulation benchmark and by 18.3 points on real-world ALOHA tasks, without updating any parameters.</p>
+      </div>
+    </section>
+
+    <section id="motivation" class="wrap">
+      <div class="sec-head reveal">
+        <div class="kicker">02 &middot; Motivation</div>
+        <h2>Two ways a frozen VLA fails at deployment</h2>
+      </div>
+      <div class="aspects reveal">
+        <div class="aspect"><div class="k">Spurious grounding</div><div class="n">Ghost grasps</div><p>The policy relies on task-irrelevant visual cues. In &ldquo;put the carrot on the plate&rdquo; it may decide the grasp worked and carry nothing to the plate.</p></div>
+        <div class="aspect"><div class="k">Kinematic instability</div><div class="n">High jerk</div><p>A chunk can be semantically right and still move with abrupt, oscillating accelerations that destabilize execution and wear the hardware.</p></div>
+        <div class="aspect"><div class="k">Same conditioning</div><div class="n">Different noise</div><p>Both kinds of failure receive real probability under the same observation and instruction, so different initial noises give good or bad chunks.</p></div>
+      </div>
+      <div class="eqcard reveal" data-tex-display="\pi_\theta(\mathbf{A}\mid\mathbf{o},\ell)=(1-\epsilon)\,p^{*}(\mathbf{A}\mid\mathbf{o},\ell)+\epsilon\,p_{\text{fail}}(\mathbf{A}\mid\mathbf{o},\ell)">&pi;<sub>&theta;</sub>(A|o,&ell;) = (1&minus;&epsilon;) p*(A|o,&ell;) + &epsilon; p<sub>fail</sub>(A|o,&ell;)</div>
+      <p class="muted small reveal" style="max-width:860px">A conceptual decomposition of the policy: <i>p</i><sub>fail</sub> collects the incorrect or unstable chunks that come from approximation error and spurious correlations, with a context-dependent weight <i>&epsilon;</i>. These chunks are not random outliers, so the question becomes which sample to execute.</p>
+
+      <div class="grid2 mt" style="align-items:start">
+        <figure class="card pad reveal">
+          <img src="assets/widowx_fail_success.jpg" width="2000" height="861" loading="lazy" alt="WidowX carrot-on-plate episode. Base policy: the gripper closes next to the carrot and the arm moves to the plate holding nothing. Base with SDN: the carrot is grasped and placed on the plate." />
+          <figcaption><b>A ghost grasp on WidowX.</b> The base &pi;<sub>0</sub> misses the carrot but continues as if it held it. With SDN the same policy grasps the carrot and places it.</figcaption>
+        </figure>
+        <figure class="card pad reveal">
+          <img src="assets/attention.jpg" width="2000" height="1935" loading="lazy" alt="Attention heatmaps for 'pick up the banana and place it into the pot'. Base: peaks on irrelevant table regions. SDN: peak on the banana. Below, the attention matrix with one dominant token." />
+          <figcaption><b>Where the policy looks.</b> The base policy spreads attention over irrelevant table regions (red box); the chunk SDN selects attends to the banana (green box). Bottom: the attention matrix becomes sparse and task-relevant.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section id="method" class="wrap">
+      <div class="sec-head reveal">
+        <div class="kicker">03 &middot; Method</div>
+        <h2>Sample <i>N</i> chunks, keep the grounded ones, execute the smoothest</h2>
+      </div>
+      <p class="lede reveal" style="margin-bottom:22px">Guidance methods such as CFG steer every denoising step with a second vector field, and a field for &ldquo;failure&rdquo; would need labeled failures, an extra model and a sensitive guidance scale. SDN instead selects globally: it draws chunks from different initial noises and picks one, without touching the denoising process. Try it below on a toy action space.</p>
+
+      <div class="card viewer reveal" id="lab">
+        <div class="vhead">
+          <div class="vtask"><span class="chip hot">Toy action space</span><span class="muted">N = 12 candidates per set, k-NN grounding, JerkRMS</span></div>
+        </div>
+        <div class="vbody">
+          <div class="vstage">
+            <canvas id="lab-canvas" aria-label="Toy action space. Top: candidate action chunks as points, blue for the positive set and red crosses for the negative set. Bottom: the 1-D action trajectory of each candidate over time. Click a blue point to see its nearest neighbours."></canvas>
+            <div class="vphase" id="lab-phase">Sample</div>
+          </div>
+          <aside class="vside">
+            <ol class="steps" id="lab-steps">
+              <li><span class="i">0</span><span>Sample <i>N</i> chunks from the clean observation (<span data-tex="\mathcal{G}">G</span>) and <i>N</i> with the target masked (<span data-tex="\mathcal{B}">B</span>)</span></li>
+              <li><span class="i">1</span><span>Grounding filter: keep the top-<i>M</i> by <span data-tex="d_{\mathcal{B}}-d_{\mathcal{G}}">d<sub>B</sub> &minus; d<sub>G</sub></span></span></li>
+              <li><span class="i">2</span><span>Kinematic refinement: execute the lowest-JerkRMS chunk</span></li>
+            </ol>
+            <div class="eq" id="lab-eq"></div>
+            <div class="verdict" id="lab-verdict"></div>
+            <div>
+              <div class="vlabel">Candidates <span class="muted">ranked by grounding score</span></div>
+              <div id="lab-rank"></div>
+            </div>
+          </aside>
+        </div>
+        <div class="legend">
+          <span class="li"><i style="background:var(--pos)"></i><span>Positive set <span data-tex="\mathcal{G}">G</span> (clean observation)</span></span>
+          <span class="li"><span style="color:var(--neg);font-weight:700">&times;</span><span>Negative set <span data-tex="\mathcal{B}">B</span> (target masked)</span></span>
+          <span class="li"><i class="ring" style="border-color:var(--ink)"></i><span>Top-<i>M</i> after Stage 1</span></span>
+          <span class="li"><i style="background:var(--pick)"></i><span>Executed chunk <span data-tex="\mathbf{A}^*">A*</span></span></span>
+          <span class="li"><i class="band" style="background:var(--pick-tint)"></i><span>Executed horizon</span></span>
+          <span class="muted">Click a blue point to see its neighbours</span>
+        </div>
+        <div class="controls">
+          <button class="ctl" id="lab-next"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 5l9 7-9 7zM16 5h3v14h-3z"/></svg>Next stage</button>
+          <button class="ctl" id="lab-resample"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4.5h4.5"/></svg>Resample noise</button>
+          <button class="ctl on" id="lab-neg" aria-pressed="true" title="When the detector finds no target, the perturbation is disabled and B is empty"><span class="box"></span>Target detected</button>
+          <label class="slider"><span><i>k</i></span><input type="range" id="lab-k" min="1" max="11" step="1" value="6" /><output id="lab-k-v">6</output></label>
+          <label class="slider"><span><i>M</i></span><input type="range" id="lab-m" min="1" max="12" step="1" value="3" /><output id="lab-m-v">3</output></label>
+        </div>
+      </div>
+      <p class="note">A toy illustration. Points stand in for action chunks, and the positions, modes and trajectories are synthetic; the scores are the paper's equations. In the paper each chunk is a full action sequence (horizon &times; DoF), the masks come from Grounding-DINO and SAM2, and SDN uses <i>N</i> = 12, <i>k</i> &isin; {6, 10}, <i>M</i> &isin; {3, 5}.</p>
+
+      <div class="pillars">
+        <div class="pillar a reveal">
+          <div class="k">Stage 1 &middot; Grounding filter</div>
+          <h3>Close to the clean samples, far from the counterfactual ones</h3>
+          <p>The negative set comes from the same policy with the task-relevant objects removed from the image, either by zero bounding-box masking or by inpainting. Those chunks can only follow spurious cues. A grounded chunk should be likely under <span data-tex="p_{\mathcal{G}}">p<sub>G</sub></span> and unlikely under <span data-tex="p_{\mathcal{B}}">p<sub>B</sub></span>, so SDN ranks by the log density ratio, estimated with <i>k</i>-nearest-neighbour distances:</p>
+          <div class="eqcard" data-tex-display="d_{\mathcal{S}}^{(i)}=\frac1k\sum_{j\in\Omega_i^{\mathcal{S}}}\lVert\mathbf{A}_i-\mathbf{A}_j\rVert_2,\qquad R_{\text{ground}}^{(i)}=d_{\mathcal{B}}^{(i)}-d_{\mathcal{G}}^{(i)}">d<sub>S</sub><sup>(i)</sup> = (1/k) &Sigma; ||A<sub>i</sub> &minus; A<sub>j</sub>||, &nbsp; R<sub>ground</sub><sup>(i)</sup> = d<sub>B</sub><sup>(i)</sup> &minus; d<sub>G</sub><sup>(i)</sup></div>
+          <p>When the detector finds no target object, the perturbation is disabled and the score falls back to <span data-tex="-d_{\mathcal{G}}^{(i)}">&minus;d<sub>G</sub></span>, the densest candidate of the positive set.</p>
+        </div>
+        <div class="pillar b reveal">
+          <div class="k">Stage 2 &middot; Kinematic refinement</div>
+          <h3>Among grounded chunks, the one with the least jerk</h3>
+          <p>The top-<i>M</i> candidates are scored by the RMS of the discrete jerk. SDN predicts chunks longer than the executed horizon, so oscillations that only build up later in the chunk still count.</p>
+          <div class="eqcard" data-tex-display="S(\mathbf{A}_i)=\sqrt{\frac{1}{L-3}\sum_{t=1}^{L-3}\big\lVert a^{(i)}_{t+3}-3a^{(i)}_{t+2}+3a^{(i)}_{t+1}-a^{(i)}_t\big\rVert_2^2},\qquad \mathbf{A}^*=\arg\min_{\mathbf{A}_i\in\mathcal{G}_M}S(\mathbf{A}_i)">S(A<sub>i</sub>) = RMS of a<sub>t+3</sub> &minus; 3a<sub>t+2</sub> + 3a<sub>t+1</sub> &minus; a<sub>t</sub>; &nbsp; A* = argmin S over the top-M</div>
+          <p>Unlike methods that alter attention or inject noise to make the output smoother, SDN measures the smoothness of each sampled chunk directly.</p>
+        </div>
+      </div>
+
+      <figure class="card pad reveal mt">
+        <img src="assets/perturb.jpg" width="2000" height="935" loading="lazy" alt="Left: a real drawer scene perturbed by inpainting (objects removed) and by zero-masking (a box over the drawer). Right: a jerky trajectory that fails and a smooth trajectory that succeeds." />
+        <figcaption><b>Building the negative set, and what Stage 2 prefers.</b> Left: the two perturbations SDN supports, inpainting (LaMa) and zero bounding-box masking; the masked regions are drawn transparent here. Right: a jittery trajectory of the base policy against the smooth one SDN selects on the real robot.</figcaption>
+      </figure>
+
+      <div class="grid2 mt reveal" style="align-items:start">
+        <div class="algo">
+          <div class="cap">Algorithm 1 &middot; SDN inference</div>
+          <div class="inp"><b>Input:</b> policy <span data-tex="\pi_\theta">&pi;<sub>&theta;</sub></span>, observation <b>o</b>, instruction <i>&ell;</i>, number of samples <i>N</i>, filter size <i>M</i></div>
+          <ol>
+            <li><span><span class="kw">for</span> <i>i</i> = 1 &hellip; <i>N</i>: <span data-tex="\mathbf{A}_i^0\sim\mathcal{N}(0,I)">A<sub>i</sub><sup>0</sup> ~ N(0, I)</span>, <span data-tex="\mathbf{A}_i\sim\pi_\theta(\cdot\mid\mathbf{o},\ell)">A<sub>i</sub> ~ &pi;<sub>&theta;</sub>(&middot;|o, &ell;)</span> into <span data-tex="\mathcal{G}">G</span></span></li>
+            <li><span><span class="kw">if</span> target object is detected <span class="kw">then</span></span></li>
+            <li class="in1"><span><span class="kw">for</span> <i>i</i> = 1 &hellip; <i>N</i>: <span data-tex="\tilde{\mathbf{A}}_i\sim\pi_\theta(\cdot\mid\mathbf{o}_{\text{neg}},\ell)">&Atilde;<sub>i</sub> ~ &pi;<sub>&theta;</sub>(&middot;|o<sub>neg</sub>, &ell;)</span> into <span data-tex="\mathcal{B}">B</span></span></li>
+            <li class="in1"><span><span data-tex="R_{\text{ground}}^{(i)}=d_{\mathcal{B}}^{(i)}-d_{\mathcal{G}}^{(i)}">R<sub>ground</sub> = d<sub>B</sub> &minus; d<sub>G</sub></span> for every <span data-tex="\mathbf{A}_i\in\mathcal{G}">A<sub>i</sub> &isin; G</span></span></li>
+            <li class="in1"><span><span data-tex="\mathcal{G}_M\leftarrow\text{TopM}(\mathcal{G})">G<sub>M</sub> &larr; TopM(G)</span> <span class="cm">&#9655; Stage 1</span></span></li>
+            <li class="in1"><span><span data-tex="\mathbf{A}^*\leftarrow\arg\min_{\mathbf{A}_i\in\mathcal{G}_M}S(\mathbf{A}_i)">A* &larr; argmin S(A<sub>i</sub>)</span> <span class="cm">&#9655; Stage 2</span></span></li>
+            <li><span><span class="kw">else</span></span></li>
+            <li class="in1"><span><span data-tex="\mathbf{A}^*\leftarrow\arg\min_{\mathbf{A}_i\in\mathcal{G}}d_{\mathcal{G}}^{(i)}">A* &larr; argmin d<sub>G</sub></span> <span class="cm">&#9655; positive grounding only</span></span></li>
+            <li><span><span class="kw">return</span> <span data-tex="\mathbf{A}^*">A*</span></span></li>
+          </ol>
+        </div>
+        <div>
+          <div class="kicker" style="color:var(--brand)">Why k-NN distances</div>
+          <h3 style="font-size:24px;margin:8px 0 4px">The score ranks like the true density ratio</h3>
+          <p class="muted small">Local density is inversely proportional to the neighbourhood volume, so <span data-tex="\log p_{\mathcal{S}}(\mathbf{A}_i)\approx-\log d_{\mathcal{S}}^{(i)}+C">log p<sub>S</sub> &asymp; &minus;log d<sub>S</sub> + C</span> and the log density ratio becomes <span data-tex="\log d_{\mathcal{B}}-\log d_{\mathcal{G}}">log d<sub>B</sub> &minus; log d<sub>G</sub></span>; SDN uses the difference of distances as a monotone surrogate. The paper's appendix shows that for <span data-tex="k\to\infty,\;N\to\infty,\;k/N\to0">k, N &rarr; &infin; with k/N &rarr; 0</span>:</p>
+          <div class="eqcard" data-tex-display="R_{\text{ground}}^{(N)}(\mathbf{A})=C_D\Big(\frac{k}{N}\Big)^{1/D}\Big(p_{\mathcal{B}}(\mathbf{A})^{-1/D}-p_{\mathcal{G}}(\mathbf{A})^{-1/D}\Big)\big(1+o_P(1)\big)">R<sub>ground</sub> = C<sub>D</sub> (k/N)<sup>1/D</sup> (p<sub>B</sub><sup>&minus;1/D</sup> &minus; p<sub>G</sub><sup>&minus;1/D</sup>)(1 + o<sub>P</sub>(1))</div>
+          <p class="muted small" style="margin:0">so the empirical ranking is asymptotically consistent with the population score <span data-tex="p_{\mathcal{B}}^{-1/D}-p_{\mathcal{G}}^{-1/D}">p<sub>B</sub><sup>&minus;1/D</sup> &minus; p<sub>G</sub><sup>&minus;1/D</sup></span>: high where the clean policy puts mass and the counterfactual one does not.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="simulation" class="wrap">
+      <div class="sec-head reveal">
+        <div class="kicker">04 &middot; SIMPLER</div>
+        <h2>Nine tasks, two robots, two backbones</h2>
+      </div>
+      <p class="muted reveal small" style="max-width:880px;margin:-6px 0 18px">Five Google Robot and four WidowX tasks from SIMPLER (task selection following PCD), 50 rollouts per task, official pretrained checkpoints, and no training. Baselines are training-free too: <b>CFG</b> (null-instruction guidance), <b>WNG</b> (white noise injected into action features), <b>BYOVLA</b> (edits task-irrelevant image regions), <b>ACG</b> (identity attention as the incoherent field) and <b>PCD</b> (contrasts predictions on original and object-masked images). SDN uses bbox zero-masking for the negative set.</p>
+      <div class="card pad reveal">
+        <div class="tabs" id="sim-tabs"></div>
+        <div class="cmprow"><span>Compare SDN with</span><div class="seg" id="sim-cmp"></div></div>
+        <div class="keyrow"><span><i style="background:var(--faint);opacity:.55"></i><span id="sim-key">Vanilla</span></span><span><i style="background:var(--brand)"></i>SDN</span><span class="muted">success rate (%), 50 rollouts per task</span></div>
+        <div class="bars" id="sim-bars"></div>
+        <details>
+          <summary>Full table: all methods (underlined = best in column; subscript = SDN minus vanilla)</summary>
+          <div class="tbl-wrap" id="sim-table"></div>
+        </details>
+      </div>
+      <p class="muted reveal" style="margin-top:14px;font-size:15px">SDN has the best average with both backbones: 72.6 with &pi;<sub>0</sub> (+8.7) and 54.5 with GR00T N1.6 (vanilla 49.5). With GR00T N1.6 it more than triples Open Drawer (4 &rarr; 14) and adds 14 points on Move Near. It also does no harm: across all 18 task&ndash;backbone pairs it never scores below the vanilla policy, while CFG, WNG, BYOVLA, ACG and PCD each lose to the vanilla policy on some tasks, and BYOVLA drops &pi;<sub>0</sub> to 40.0 on average.</p>
+
+      <figure class="card pad reveal mt">
+        <img src="assets/googlerobot_fail_success.jpg" width="1376" height="498" loading="lazy" alt="Google Robot apple-in-drawer episode. Base: the gripper reaches the apple but the episode fails. Base with SDN: the apple is placed in the drawer." />
+        <figcaption><b>Google Robot, Apple Drawer.</b> The base policy reaches the apple but fails to put it into the open drawer; with SDN the same policy completes the task.</figcaption>
+      </figure>
+    </section>
+
+    <section id="realworld" class="wrap">
+      <div class="sec-head reveal">
+        <div class="kicker">05 &middot; Real world</div>
+        <h2>Bimanual ALOHA: higher success and smoother motion</h2>
+      </div>
+      <figure class="card pad reveal">
+        <img src="assets/realworld_tasks.jpg" width="2000" height="631" loading="lazy" alt="Two real ALOHA tasks. Cube2Drawer: open the top drawer, place a red block inside, close the drawer. Banana2Pot: place a banana in a pot, then close the pot with its lid using the right gripper." />
+        <figcaption><b>Two long-horizon tasks on ALOHA.</b> (a) <i>Cube2Drawer</i>: open the top drawer, pick up the red block, place it inside and close the drawer. (b) <i>Banana2Pot</i>: put the banana into the pot, then pick up the lid with the right gripper and close the pot. The policy is GR00T N1.5 fine-tuned for this robot; SDN runs on top without further training.</figcaption>
+      </figure>
+      <div class="grid2 wr mt">
+        <div class="card pad reveal">
+          <h3 class="ttl">Task success</h3>
+          <p class="sub">Success rate (%). Both stages help on their own, and together they are best on average.</p>
+          <div class="tabs" id="rw-tabs"></div>
+          <div class="tnums" id="rw-bars"></div>
+        </div>
+        <div class="card pad reveal">
+          <h3 class="ttl">Motion quality</h3>
+          <p class="sub">JerkRMS and action total variation (ATV, &times;10<sup>2</sup>); lower is better. Subscripts: change relative to the vanilla policy.</p>
+          <div class="tbl-wrap" id="rw-motion"></div>
+          <p class="muted small" style="margin:12px 0 0">SDN is the only method that lowers both metrics. Every guidance baseline raises them, ACG most of all (+114% jerk on Banana2Pot): a hand-designed negative direction can push the policy out of distribution and into high-frequency oscillation.</p>
+        </div>
+      </div>
+      <p class="muted reveal" style="margin-top:14px;font-size:15px">SDN reaches 48.3% against 30.0% for the vanilla policy and 41.7% for the best baseline. These tasks need fast grasping and placing, where enforcing smoothness could hurt; instead Stage 2 alone adds 16.7 points, Stage 1 alone 13.3, and the full pipeline 18.3.</p>
+    </section>
+
+    <section id="analysis" class="wrap">
+      <div class="sec-head reveal">
+        <div class="kicker">06 &middot; Analysis</div>
+        <h2>Why the negative set works, and what the filter selects</h2>
+      </div>
+      <div class="grid2">
+        <div class="card pad reveal">
+          <h3 class="ttl">Masking the target collapses the policy</h3>
+          <p class="sub">Success (%) when the task-relevant objects are masked or inpainted, and when random task-irrelevant regions are masked instead. Without the target, the policies fall back on background shortcuts; this is the behavior the negative set captures.</p>
+          <div class="tbl-wrap">
+            <table class="mini">
+              <thead><tr><th>Policy</th><th>Google Robot</th><th>WidowX</th><th>Avg.</th></tr></thead>
+              <tbody>
+                <tr><td>&pi;<sub>0</sub></td><td>56.4</td><td>73.4</td><td>63.9</td></tr>
+                <tr><td>&nbsp;&nbsp;+ masked object</td><td>6.0</td><td>0.0</td><td>3.0</td></tr>
+                <tr><td>&nbsp;&nbsp;+ inpainting</td><td>5.0</td><td>0.0</td><td>2.5</td></tr>
+                <tr><td>&nbsp;&nbsp;+ random masking</td><td>56.0</td><td>72.0</td><td>64.0</td></tr>
+                <tr class="avg"><td>GR00T N1.6</td><td>45.6</td><td>54.4</td><td>49.5</td></tr>
+                <tr><td>&nbsp;&nbsp;+ masked object</td><td>2.8</td><td>0.0</td><td>1.4</td></tr>
+                <tr><td>&nbsp;&nbsp;+ inpainting</td><td>2.0</td><td>0.0</td><td>1.0</td></tr>
+                <tr><td>&nbsp;&nbsp;+ random masking</td><td>46.0</td><td>54.0</td><td>50.0</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card pad reveal">
+          <h3 class="ttl">The filter picks less spurious actions</h3>
+          <p class="sub">Nuisance Mass Ratio (NMR, from VLA-Explain) of GR00T N1.6: the share of prediction-relevant tokens that fall on irrelevant regions. Lower is better. Picking the worst-grounded candidate raises it on every task, picking the best-grounded lowers it, and a larger pool lowers it further.</p>
+          <div class="tbl-wrap">
+            <table class="mini">
+              <thead><tr><th>Task</th><th>Worst<br/>N=12</th><th>Base</th><th>Best<br/>N=12</th><th>Best<br/>N=24</th><th>Best<br/>N=36</th></tr></thead>
+              <tbody>
+                <tr><td>Pick Coke Can</td><td>0.740</td><td>0.668</td><td>0.663</td><td>0.657</td><td class="best">0.656</td></tr>
+                <tr><td>Move Near</td><td>0.780</td><td>0.705</td><td>0.679</td><td class="best">0.660</td><td>0.667</td></tr>
+                <tr><td>Carrot</td><td>0.770</td><td>0.746</td><td>0.712</td><td>0.705</td><td class="best">0.698</td></tr>
+                <tr><td>Spoon</td><td>0.700</td><td>0.684</td><td>0.666</td><td class="best">0.661</td><td>0.664</td></tr>
+                <tr class="avg"><td>Average</td><td>0.750</td><td>0.701</td><td>0.680</td><td class="best">0.671</td><td class="best">0.671</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <figure class="card pad reveal mt">
+        <img src="assets/vla_explain.jpg" width="2000" height="1340" loading="lazy" alt="VLA-Explain attribution maps on a Pick Coke Can episode for the worst-grounded candidate, the base policy and the best-grounded candidate. The best-grounded maps concentrate on the can." />
+        <figcaption><b>Attribution maps (VLA-Explain), Pick Coke Can.</b> The worst-grounded candidate attends to the table edge and the background; the best-grounded one concentrates on the can.</figcaption>
+      </figure>
+
+      <div class="mt reveal">
+        <h3 class="blk">Robust to how the negative set is built</h3>
+        <p class="muted blk" style="max-width:880px">SDN against PCD, which also contrasts clean and object-removed observations, with both perturbations. SDN has the higher average in all four settings, and with cheap bbox masking it already beats PCD with inpainting, which PCD needs for its best results. Underlined: the better of SDN and PCD for that perturbation.</p>
+        <div class="card pad">
+          <div class="tabs" id="neg-tabs"></div>
+          <div class="tbl-wrap" id="neg-table"></div>
+        </div>
+      </div>
+
+      <div class="grid2 mt" style="align-items:start">
+        <div class="reveal">
+          <h3 class="blk">Robust to its own hyperparameters</h3>
+          <p class="muted blk">&pi;<sub>0</sub> on SIMPLER. Success rises from 63.9 at <i>N</i> = 1 to 72.6 at <i>N</i> = 12 and then saturates while latency keeps growing, so SDN uses <i>N</i> = 12. Every neighbourhood size <i>k</i> lands between 71.3 and 74.6.</p>
+          <figure class="card pad">
+            <img src="assets/ablation_n_k.jpg" width="2000" height="785" loading="lazy" alt="Left: average success and inference latency against the number of candidates N (1, 5, 12, 24, 36). Right: average success for k = 1, 2, 4, 6, 10: 72.0, 74.0, 71.3, 74.6, 72.0." />
+          </figure>
+        </div>
+        <div class="reveal">
+          <h3 class="blk">Across horizons and action spaces</h3>
+          <p class="muted blk">Gains hold at every action horizon with GR00T N1.6, and for both 7-DoF (&pi;<sub>0</sub>, SIMPLER) and 14-DoF (bimanual ALOHA) action spaces.</p>
+          <figure class="card pad">
+            <img src="assets/robustness_horizon_dof.jpg" width="2000" height="822" loading="lazy" alt="Left: success of GR00T N1.6 with and without SDN for action horizons 1, 4, 10, 15, 20; SDN is higher at every horizon. Right: base vs SDN for 7-DoF (63.9 vs 72.6) and 14-DoF (30.0 vs 48.33)." />
+          </figure>
+        </div>
+      </div>
+
+      <div class="limits reveal">
+        <div class="kicker">Limitations</div>
+        <ul>
+          <li>The perturbations are object-centric, so they may miss spurious behavior caused by dynamic lighting, texture shifts or broader environmental distractors.</li>
+          <li>The number of candidates, <i>k</i> and <i>M</i> are fixed at inference time rather than adapted to the difficulty or uncertainty of each step.</li>
+          <li>Sampling a negative set and several candidates costs extra inference compute; latency grows with <i>N</i>.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="citation" class="wrap">
+      <div class="sec-head reveal">
+        <div class="kicker">07 &middot; Citation</div>
+        <h2>BibTeX</h2>
+      </div>
+      <!-- TODO: replace with the final entry (authors, venue, key) once the paper is public. -->
+      <pre class="bib reveal" id="bib"><button class="ctl copy" id="copy">Copy</button>@article{sdn2026,
+  title  = {Test-Time Improvement of VLA Policies via Selected Diffusion Noise
+            for Spurious-Robust Action Smoothing},
+  author = {Anonymous},
+  year   = {2026}
+}</pre>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">Test-Time Improvement of VLA Policies via Selected Diffusion Noise for Spurious-Robust Action Smoothing. Page design after the <a href="https://ducido.github.io/pgpg.github.io/">PGPG</a> project page.</div>
+  </footer>
+
+  <script defer src="page.js"></script>
+  <script defer src="results.js"></script>
+  <script defer src="lab.js"></script>
+</body>
+</html>
