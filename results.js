@@ -43,12 +43,13 @@
     ["SDN (full)", [53.33, 43.33, 48.33], "ours"],
   ];
   // Motion quality: JerkRMS and ATV (x10^2) on Cube2Drawer, Banana2Pot; lower is better.
+  // Values and relative changes as printed in the paper (its rounding, e.g. +114%), not recomputed.
   const MOTION = [
-    ["GR00T N1.5", [12.45, 4.87, 7.07, 4.80]],
-    ["CFG", [12.79, 4.90, 7.18, 4.82]],
-    ["ACG", [18.1, 6.00, 15.17, 6.00]],
-    ["PCD", [12.47, 4.88, 7.08, 4.80]],
-    ["SDN", [11.80, 4.80, 6.54, 4.70]],
+    ["GR00T N1.5", ["12.45", "4.87", "7.07", "4.80"], []],
+    ["CFG", ["12.79", "4.90", "7.18", "4.82"], ["+2.7%", "+0.6%", "+1.5%", "+0.4%"]],
+    ["ACG", ["18.1", "6.00", "15.17", "6.00"], ["+45.4%", "+23.2%", "+114%", "+25.0%"]],
+    ["PCD", ["12.47", "4.88", "7.08", "4.80"], ["+0.1%", "+0.2%", "+0.1%", "+0.0%"]],
+    ["SDN", ["11.80", "4.80", "6.54", "4.70"], ["−5.2%", "−1.4%", "−7.5%", "−2.1%"]],
   ];
   // SDN vs PCD with two ways of building the negative set (bbox zero-masking, LaMa inpainting).
   const NEGSET = {
@@ -115,14 +116,12 @@
     grow($("rw-bars"));
   }
   function drawMotion() {
-    const b = MOTION[0][1];
-    const best = b.map((_, i) => Math.min(...MOTION.map(([, v]) => v[i])));
+    const best = MOTION[0][1].map((_, i) => Math.min(...MOTION.map(([, v]) => +v[i])));
     $("rw-motion").innerHTML = `<table class="mini"><thead><tr><th rowspan="2">Method</th><th colspan="2">Cube2Drawer</th><th colspan="2">Banana2Pot</th></tr>
       <tr><th>Jerk</th><th>ATV</th><th>Jerk</th><th>ATV</th></tr></thead><tbody>${
-      MOTION.map(([n, v], r) => `<tr class="${n === "SDN" ? "ours" : ""}"><td>${n}</td>${v.map((x, i) => {
-        const rel = (100 * (x - b[i])) / b[i];
-        const sub = r === 0 ? "" : `<sub class="${rel < -0.05 ? "up" : rel > 0.05 ? "dn" : "flat"}">${rel >= 0 ? "+" : "−"}${Math.abs(rel).toFixed(1)}%</sub>`;
-        return `<td class="${x === best[i] ? "best" : ""}">${x.toFixed(2)}${sub}</td>`;
+      MOTION.map(([n, v, rel]) => `<tr class="${n === "SDN" ? "ours" : ""}"><td>${n}</td>${v.map((x, i) => {
+        const r = rel[i], cls = !r ? "" : r.startsWith("−") ? "up" : parseFloat(r) > 0 ? "dn" : "flat";
+        return `<td class="${+x === best[i] ? "best" : ""}">${x}${r ? `<sub class="${cls}">${r}</sub>` : ""}</td>`;
       }).join("")}</tr>`).join("")}</tbody></table>`;
   }
 

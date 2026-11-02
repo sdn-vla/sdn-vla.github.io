@@ -73,7 +73,7 @@
       <div class="stats reveal">
         <div class="stat"><div class="n">72.6<small>+8.7</small></div><div class="l">SIMPLER 9-task average with &pi;<sub>0</sub> (63.9 for the vanilla policy)</div></div>
         <div class="stat"><div class="n">54.5<small>+5.0</small></div><div class="l">SIMPLER 9-task average with GR00T N1.6 (49.5 vanilla)</div></div>
-        <div class="stat"><div class="n">48.3<small>+18.3</small></div><div class="l">Real ALOHA tasks with GR00T N1.5 (30.0 vanilla), with lower jerk</div></div>
+        <div class="stat"><div class="n">48.33<small>+18.33</small></div><div class="l">Real ALOHA tasks with GR00T N1.5 (30.00 vanilla), with lower jerk</div></div>
         <div class="stat"><div class="n">0<small style="color:var(--muted)">/ 18</small></div><div class="l">Task&ndash;backbone pairs on SIMPLER where SDN scores below the vanilla policy</div></div>
       </div>
     </div>
@@ -94,7 +94,7 @@
       </div>
       <div class="lede reveal">
         <p>Diffusion-based Vision-Language-Action (VLA) policies generalize well in robot manipulation, but their deployment can remain unreliable. Spurious visual reliance and stochastic action generation lead to grounding failures and kinematically unstable behaviors, and fine-tuning a multi-billion-parameter policy for every new variation is costly and risks catastrophic forgetting.</p>
-        <p>We introduce <b>Selected Diffusion Noise (SDN)</b>, a training-free method that treats diffusion noise as a controllable degree of freedom for improving test-time reliability. SDN samples multiple candidate action chunks and applies two-stage selection: it first filters candidates by task-relevant visual grounding, using a counterfactual negative set, and then selects the kinematically most stable chunk by JerkRMS. Across three VLA policies (&pi;<sub>0</sub>, GR00T N1.5 and N1.6), SDN improves success by 5 to 9 points on the SIMPLER simulation benchmark and by 18.3 points on real-world ALOHA tasks, without updating any parameters.</p>
+        <p>We introduce <b>Selected Diffusion Noise (SDN)</b>, a training-free method that treats diffusion noise as a controllable degree of freedom for improving test-time reliability. SDN samples multiple candidate action chunks and applies two-stage selection: it first filters candidates by task-relevant visual grounding, using a counterfactual negative set, and then selects the kinematically most stable chunk by JerkRMS. Across three VLA policies (&pi;<sub>0</sub>, GR00T N1.5 and N1.6), SDN improves success by 5 to 9 points on the SIMPLER simulation benchmark and by 18.33 points on real-world ALOHA tasks, without updating any parameters.</p>
       </div>
     </section>
 
@@ -266,7 +266,7 @@
           <p class="muted small" style="margin:12px 0 0">SDN is the only method that lowers both metrics. Every guidance baseline raises them, ACG most of all (+114% jerk on Banana2Pot): a hand-designed negative direction can push the policy out of distribution and into high-frequency oscillation.</p>
         </div>
       </div>
-      <p class="muted reveal" style="margin-top:14px;font-size:15px">SDN reaches 48.3% against 30.0% for the vanilla policy and 41.7% for the best baseline. These tasks need fast grasping and placing, where enforcing smoothness could hurt; instead Stage 2 alone adds 16.7 points, Stage 1 alone 13.3, and the full pipeline 18.3.</p>
+      <p class="muted reveal" style="margin-top:14px;font-size:15px">SDN reaches 48.33% against 30.00% for the vanilla policy and 41.67% for the best baseline. These tasks need fast grasping and placing, where enforcing smoothness could hurt; instead Stage 2 alone adds 16.67 points, Stage 1 alone 13.33, and the full pipeline 18.33.</p>
     </section>
 
     <section id="analysis" class="wrap">
@@ -369,7 +369,7 @@
   </main>
 
   <footer>
-    <div class="wrap">Test-Time Improvement of VLA Policies via Selected Diffusion Noise for Spurious-Robust Action Smoothing. Page design after the <a href="https://ducido.github.io/pgpg.github.io/">PGPG</a> project page.</div>
+    <div class="wrap">Test-Time Improvement of VLA Policies via Selected Diffusion Noise for Spurious-Robust Action Smoothing.</div>
   </footer>
 
   <script defer src="page.js"></script>
