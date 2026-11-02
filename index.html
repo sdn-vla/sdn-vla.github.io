@@ -104,7 +104,7 @@
 
       <div class="stats reveal">
         <div class="stat"><div class="n">72.6<small>+8.7</small></div><div class="l">SIMPLER 9-task average with &pi;<sub>0</sub> (63.9 for the vanilla policy)</div></div>
-        <div class="stat"><div class="n">54.5<small>+5.0</small></div><div class="l">SIMPLER 9-task average with GR00T N1.6 (49.5 vanilla)</div></div>
+        <div class="stat"><div class="n">54.4<small>+4.9</small></div><div class="l">SIMPLER 9-task average with GR00T N1.6 (49.5 vanilla)</div></div>
         <div class="stat"><div class="n">48.33<small>+18.33</small></div><div class="l">Real ALOHA tasks with GR00T N1.5 (30.00 vanilla), with lower jerk</div></div>
         <div class="stat"><div class="n">0<small style="color:var(--muted)">/ 18</small></div><div class="l">Task&ndash;backbone pairs on SIMPLER where SDN scores below the vanilla policy</div></div>
       </div>
@@ -126,7 +126,7 @@
       </div>
       <div class="lede reveal">
         <p>Diffusion-based Vision-Language-Action (VLA) policies generalize well in robot manipulation, but their deployment can remain unreliable. Spurious visual reliance and stochastic action generation lead to grounding failures and kinematically unstable behaviors, and fine-tuning a multi-billion-parameter policy for every new variation is costly and risks catastrophic forgetting.</p>
-        <p>We introduce <b>Selected Diffusion Noise (SDN)</b>, a training-free method that treats diffusion noise as a controllable degree of freedom for improving test-time reliability. SDN samples multiple candidate action chunks and applies two-stage selection: it first filters candidates by task-relevant visual grounding, using a counterfactual negative set, and then selects the kinematically most stable chunk by JerkRMS. Across three VLA policies (&pi;<sub>0</sub>, GR00T N1.5 and N1.6), SDN improves success by 5 to 9 points on the SIMPLER simulation benchmark and by 18.33 points on real-world ALOHA tasks, without updating any parameters.</p>
+        <p>We introduce <b>Selected Diffusion Noise (SDN)</b>, a training-free method that treats diffusion noise as a controllable degree of freedom for improving test-time reliability. SDN samples multiple candidate action chunks and applies two-stage selection: it first filters candidates by task-relevant visual grounding, using a counterfactual negative set, and then selects the kinematically most stable chunk by JerkRMS. Across three VLA policies (&pi;<sub>0</sub>, GR00T N1.5 and N1.6), SDN improves success by 4.9 to 8.7 points on the SIMPLER simulation benchmark and by 18.33 points on real-world ALOHA tasks, without updating any parameters.</p>
       </div>
     </section>
 
@@ -267,7 +267,7 @@
           <div class="tbl-wrap" id="sim-table"></div>
         </details>
       </div>
-      <p class="muted reveal" style="margin-top:14px;font-size:15px">SDN has the best average with both backbones: 72.6 with &pi;<sub>0</sub> (+8.7) and 54.5 with GR00T N1.6 (vanilla 49.5). With GR00T N1.6 it more than triples Open Drawer (4 &rarr; 14) and adds 14 points on Move Near. It also does no harm: across all 18 task&ndash;backbone pairs it never scores below the vanilla policy, while CFG, WNG, BYOVLA, ACG and PCD each lose to the vanilla policy on some tasks, and BYOVLA drops &pi;<sub>0</sub> to 40.0 on average.</p>
+      <p class="muted reveal" style="margin-top:14px;font-size:15px">SDN has the best average with both backbones: 72.6 with &pi;<sub>0</sub> (+8.7) and 54.4 with GR00T N1.6 (+4.9). With GR00T N1.6 it more than triples Open Drawer (4 &rarr; 14) and adds 14 points on Move Near. It also does no harm: across all 18 task&ndash;backbone pairs it never scores below the vanilla policy, while CFG, WNG, BYOVLA, ACG and PCD each lose to the vanilla policy on some tasks, and BYOVLA drops &pi;<sub>0</sub> to 40.0 on average.</p>
 
       <figure class="card pad reveal mt">
         <img src="assets/googlerobot_fail_success.jpg" width="1376" height="498" loading="lazy" alt="Google Robot apple-in-drawer episode. Base: the gripper reaches the apple but the episode fails. Base with SDN: the apple is placed in the drawer." />
@@ -295,7 +295,7 @@
           <h3 class="ttl">Motion quality</h3>
           <p class="sub">JerkRMS and action total variation (ATV, &times;10<sup>2</sup>); lower is better. Subscripts: change relative to the vanilla policy.</p>
           <div class="tbl-wrap" id="rw-motion"></div>
-          <p class="muted small" style="margin:12px 0 0">SDN is the only method that lowers both metrics. Every guidance baseline raises them, ACG most of all (+114% jerk on Banana2Pot): a hand-designed negative direction can push the policy out of distribution and into high-frequency oscillation.</p>
+          <p class="muted small" style="margin:12px 0 0">SDN is the only method that lowers both metrics. Every guidance baseline raises them, ACG most of all (+114.6% jerk on Banana2Pot): a hand-designed negative direction can push the policy out of distribution and into high-frequency oscillation.</p>
         </div>
       </div>
       <p class="muted reveal" style="margin-top:14px;font-size:15px">SDN reaches 48.33% against 30.00% for the vanilla policy and 41.67% for the best baseline. These tasks need fast grasping and placing, where enforcing smoothness could hurt; instead Stage 2 alone adds 16.67 points, Stage 1 alone 13.33, and the full pipeline 18.33.</p>
@@ -315,13 +315,13 @@
               <thead><tr><th>Policy</th><th>Google Robot</th><th>WidowX</th><th>Avg.</th></tr></thead>
               <tbody>
                 <tr><td>&pi;<sub>0</sub></td><td>56.4</td><td>73.4</td><td>63.9</td></tr>
-                <tr><td>&nbsp;&nbsp;+ masked object</td><td>6.0</td><td>0.0</td><td>3.0</td></tr>
-                <tr><td>&nbsp;&nbsp;+ inpainting</td><td>5.0</td><td>0.0</td><td>2.5</td></tr>
-                <tr><td>&nbsp;&nbsp;+ random masking</td><td>56.0</td><td>72.0</td><td>64.0</td></tr>
+                <tr><td>&nbsp;&nbsp;+ masked object</td><td>6.0</td><td>0.0</td><td>3.3</td></tr>
+                <tr><td>&nbsp;&nbsp;+ inpainting</td><td>5.0</td><td>0.0</td><td>2.8</td></tr>
+                <tr><td>&nbsp;&nbsp;+ random masking</td><td>56.0</td><td>72.0</td><td>63.1</td></tr>
                 <tr class="avg"><td>GR00T N1.6</td><td>45.6</td><td>54.4</td><td>49.5</td></tr>
-                <tr><td>&nbsp;&nbsp;+ masked object</td><td>2.8</td><td>0.0</td><td>1.4</td></tr>
-                <tr><td>&nbsp;&nbsp;+ inpainting</td><td>2.0</td><td>0.0</td><td>1.0</td></tr>
-                <tr><td>&nbsp;&nbsp;+ random masking</td><td>46.0</td><td>54.0</td><td>50.0</td></tr>
+                <tr><td>&nbsp;&nbsp;+ masked object</td><td>2.8</td><td>0.0</td><td>1.6</td></tr>
+                <tr><td>&nbsp;&nbsp;+ inpainting</td><td>2.0</td><td>0.0</td><td>1.1</td></tr>
+                <tr><td>&nbsp;&nbsp;+ random masking</td><td>46.0</td><td>54.0</td><td>49.6</td></tr>
               </tbody>
             </table>
           </div>
@@ -337,7 +337,7 @@
                 <tr><td>Move Near</td><td>0.780</td><td>0.705</td><td>0.679</td><td class="best">0.660</td><td>0.667</td></tr>
                 <tr><td>Carrot</td><td>0.770</td><td>0.746</td><td>0.712</td><td>0.705</td><td class="best">0.698</td></tr>
                 <tr><td>Spoon</td><td>0.700</td><td>0.684</td><td>0.666</td><td class="best">0.661</td><td>0.664</td></tr>
-                <tr class="avg"><td>Average</td><td>0.750</td><td>0.701</td><td>0.680</td><td class="best">0.671</td><td class="best">0.671</td></tr>
+                <tr class="avg"><td>Average</td><td>0.748</td><td>0.701</td><td>0.680</td><td class="best">0.671</td><td class="best">0.671</td></tr>
               </tbody>
             </table>
           </div>
