@@ -18,7 +18,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=STIX+Two+Text:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
-  <link rel="stylesheet" href="style.css?v=2" />
+  <link rel="stylesheet" href="style.css?v=3" />
 </head>
 <body>
   <div id="progress"></div>
@@ -29,7 +29,7 @@
       <li><a href="#abstract"><span>01</span>Abstract</a></li>
       <li><a href="#motivation"><span>02</span>Motivation</a></li>
       <li><a href="#method"><span>03</span>Method</a></li>
-      <li><a href="#simulation"><span>04</span>SIMPLER</a></li>
+      <li><a href="#simulation"><span>04</span>Simulation</a></li>
       <li><a href="#realworld"><span>05</span>Real world</a></li>
       <li><a href="#analysis"><span>06</span>Analysis</a></li>
       <li><a href="#citation"><span>07</span>Citation</a></li>
@@ -83,13 +83,13 @@
         <span><sup>10</sup>University of Arkansas</span>
         <span><sup>11</sup>TU Darmstadt</span>
       </p>
-      <div class="logos card pad">
-        <img src="assets/logo/vinrobotics_logo_v2.svg" alt="VinRobotics" style="height:24px" />
-        <img src="assets/logo/vinuniversity_logo.jpg" alt="VinUniversity" style="height:30px" />
-        <img src="assets/logo/kaist_logo.png" alt="KAIST" style="height:60px" />
-        <img src="assets/logo/university-of-stuttgart-logo.png" alt="University of Stuttgart" style="height:60px" />
-        <img src="assets/logo/mpi_logo_v2.png" alt="IMPRS-IS" style="height:40px" />
-        <img src="assets/logo/dfki_logo.png" alt="DFKI" style="height:52px" />
+      <div class="logos">
+        <span class="card"><img src="assets/logo/vinrobotics_logo_v2.svg" alt="VinRobotics" style="height:24px" /></span>
+        <span class="card"><img src="assets/logo/vinuniversity_logo.jpg" alt="VinUniversity" style="height:30px" /></span>
+        <span class="card"><img src="assets/logo/kaist_logo.png" alt="KAIST" style="height:60px" /></span>
+        <span class="card"><img src="assets/logo/university-of-stuttgart-logo.png" alt="University of Stuttgart" style="height:60px" /></span>
+        <span class="card"><img src="assets/logo/mpi_logo_v2.png" alt="IMPRS-IS" style="height:40px" /></span>
+        <span class="card"><img src="assets/logo/dfki_logo.png" alt="DFKI" style="height:52px" /></span>
       </div>
       <!-- TODO: venue line, e.g. <p class="venue">IEEE International Conference on Robotics and Automation (ICRA) 2027</p> -->
       <div class="links">
@@ -264,7 +264,7 @@
 
     <section id="simulation" class="wrap">
       <div class="sec-head reveal">
-        <div class="kicker">04 &middot; SIMPLER</div>
+        <div class="kicker">04 &middot; Simulation</div>
         <h2>Nine tasks, two robots, two backbones</h2>
       </div>
       <p class="muted reveal small" style="max-width:880px;margin:-6px 0 18px">Five Google Robot and four WidowX tasks from SIMPLER (task selection following PCD), 50 rollouts per task, official pretrained checkpoints, and no training. Baselines are training-free too: <b>CFG</b> (null-instruction guidance), <b>WNG</b> (white noise injected into action features), <b>BYOVLA</b> (edits task-irrelevant image regions), <b>ACG</b> (identity attention as the incoherent field) and <b>PCD</b> (contrasts predictions on original and object-masked images). SDN uses bbox zero-masking for the negative set.</p>
