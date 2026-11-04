@@ -108,6 +108,7 @@ section { padding: 34px 0 44px; }
 .muted { color: var(--muted); }
 .small { font-size: 14.5px; }
 figure { margin: 0; }
+figure video { display: block; width: 100%; height: auto; border-radius: 8px; }
 figcaption { margin-top: 12px; font-size: 14px; color: var(--muted); line-height: 1.55; }
 figcaption b { color: var(--ink); }
 .card { background: var(--card); border: 1px solid var(--rule); border-radius: 14px; box-shadow: var(--shadow); }

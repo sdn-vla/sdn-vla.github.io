@@ -113,7 +113,11 @@
   <main>
     <section class="wrap reveal">
       <figure class="card pad">
-        <img src="assets/overview.jpg" width="2000" height="685" alt="SDN overview: clean and perturbed inputs pass through the same VLA; the diffusion policy produces a positive set G and a negative set B of action chunks; candidates are pulled toward G and pushed away from B, then the smoothest chunk is selected." />
+        <video src="assets/sdn_video.mp4" poster="assets/video_thumb.jpg" controls preload="metadata" playsinline></video>
+        <figcaption><b>Presentation video</b> (3 min).</figcaption>
+      </figure>
+      <figure class="card pad mt">
+        <img src="assets/overview.jpg"width="2000" height="685" alt="SDN overview: clean and perturbed inputs pass through the same VLA; the diffusion policy produces a positive set G and a negative set B of action chunks; candidates are pulled toward G and pushed away from B, then the smoothest chunk is selected." />
         <figcaption><b>Overview of SDN.</b> The frozen VLA samples <i>N</i> action chunks from the clean observation (positive set <span data-tex="\mathcal{G}">&#x1D4A2;</span>) and <i>N</i> from a perturbed observation in which the task-relevant objects are masked (negative set <span data-tex="\mathcal{B}">&#x1D4D1;</span>). <i>Stage 1</i> keeps the top-<i>M</i> candidates by the <i>k</i>-NN grounding score <span data-tex="R_{\text{ground}}^{(i)}=d_{\mathcal{B}}^{(i)}-d_{\mathcal{G}}^{(i)}">R = d<sub>B</sub> &minus; d<sub>G</sub></span>. <i>Stage 2</i> executes the candidate with the lowest jerk.</figcaption>
       </figure>
     </section>
